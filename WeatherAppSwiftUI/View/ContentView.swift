@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     @State var selectedLocation: String = ""
-       @StateObject var viewModel: WeatherViewModel
+    @StateObject var viewModel: WeatherViewModel
+    @State var shouldShowMissingTextError: Bool = false
 
        init(resolver: WeatherFetching = WeatherFetcher()) {
            _viewModel = StateObject(wrappedValue: WeatherViewModel(resolver: resolver))
@@ -17,6 +18,10 @@ struct ContentView: View {
 
     var body: some View {
             VStack {
+                if shouldShowMissingTextError {
+                    Text("Please enter a city")
+                        .foregroundStyle(.red)
+                }
                 switch viewModel.loadingState {
                 case .loading:
                     ProgressView()
@@ -31,7 +36,7 @@ struct ContentView: View {
                         }
                     }
                 case .failure:
-                    ProgressView()
+                    failureView
                 }
             }
             .task {
@@ -151,8 +156,21 @@ struct ContentView: View {
             .frame(maxHeight: 150)
             .padding(.top)
         }
-
-                
+    }
+    
+    @ViewBuilder
+    var failureView: some View {
+        VStack {
+            Text("Failed To Load")
+                .font(.largeTitle)
+                .fontDesign(.rounded)
+                .fontWeight(.semibold)
+            Text("Please Try Again")
+                .font(.callout)
+                .fontDesign(.rounded)
+                .fontWeight(.semibold)
+        }
+        .foregroundStyle(.red)
     }
     
     @ViewBuilder
@@ -184,7 +202,12 @@ struct ContentView: View {
         }
         .onSubmit {
             Task {
-                await viewModel.fetchWeather(city: selectedLocation)
+                if !selectedLocation.isEmpty {
+                    shouldShowMissingTextError = false
+                    await viewModel.fetchWeather(city: selectedLocation)
+                } else {
+                    shouldShowMissingTextError = true
+                }
             }
         }
         .overlay(
