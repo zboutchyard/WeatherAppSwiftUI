@@ -18,6 +18,7 @@ class WeatherViewModel: ObservableObject {
     @Published var weatherData: Weather?
     @Published var loadingState: LoadingState = .loaded
     @Published var selectedCity: String = ""
+    @Published var userDefaultSelected: Bool = false
     
     
     
@@ -26,13 +27,16 @@ class WeatherViewModel: ObservableObject {
     private let resolver: Resolver
     
     init(resolver: Resolver) {
-        self.resolver = resolver
+        self.resolver = resolver       
     }
     
     @MainActor
-    public func fetchWeather(city: String) async {
+    public func fetchWeather(city: String, firstLoad: Bool = false) async {
         selectedCity = city
         do {
+            if firstLoad == false {
+                clearUserDefaults()
+            }
             loadingState = .loading
             weatherData = try await resolver.fetchWeather(for: selectedCity)
             loadingState = .loaded
@@ -41,11 +45,21 @@ class WeatherViewModel: ObservableObject {
         }
     }
     
-    //    public func setUserDefaults() {
-    //        UserDefaults.setValue(city)
-    //    }
+    public func setUserDefaults() {
+        UserDefaults.standard.set(selectedCity, forKey: "selectedCity")
+        userDefaultSelected = true
+    }
     
-    //    getUserDefaults() {
-    //        UserDefaults.
-    //    }
+    @MainActor
+    public func getUserDefaults() {
+        self.selectedCity = UserDefaults.standard.string(forKey: "selectedCity") ?? ""
+        if self.selectedCity != "" {
+            userDefaultSelected = true
+        }
+    }
+    
+    public func clearUserDefaults() {
+        UserDefaults.standard.removeObject(forKey: "selectedCity")
+        userDefaultSelected = false
+    }
 }

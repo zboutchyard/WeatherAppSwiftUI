@@ -24,10 +24,22 @@ struct ContentView: View {
                     if viewModel.selectedCity == "" {
                         noCitySelectedView
                     } else {
-                        currentWeatherView
+                        if viewModel.userDefaultSelected {
+                            userDefaultWeatherView
+                        } else {
+                            currentWeatherView
+                        }
                     }
                 case .failure:
                     ProgressView()
+                }
+            }
+            .task {
+                viewModel.getUserDefaults()
+                if viewModel.selectedCity != "" {
+                    Task {
+                        await viewModel.fetchWeather(city: viewModel.selectedCity, firstLoad: true)
+                    }
                 }
             }
             .safeAreaInset(edge: .top) {
@@ -38,37 +50,109 @@ struct ContentView: View {
     }
     
     @ViewBuilder
-    var currentWeatherView: some View {
-                RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.1))
-                    .overlay {
-                        HStack {
-                            VStack(alignment: .center) {
-                                Text(viewModel.weatherData?.location.name ?? "")
-                                    .font(.callout)
-                                    .fontDesign(.rounded)
-                                    .fontWeight(.semibold)
-                                Text("\(Int(viewModel.weatherData?.current.feelslikeF ?? 0) )°")
-                                    .font(.system(size: 60))
-                                    .fontDesign(.rounded)
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            VStack {
-                                if let icon = viewModel.weatherData?.current.condition.icon {
-                                    AsyncImage(url: URL(string: "https:\(icon)")) { result in
-                                        result.image?
-                                            .resizable()
-                                            .scaledToFill()
-                                    }
-                                    .frame(width: 200, height: 200)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        .padding()
+    var userDefaultWeatherView: some View {
+        VStack {
+            if let icon = viewModel.weatherData?.current.condition.icon {
+                AsyncImage(url: URL(string: "https:\(icon)")) { result in
+                    result.image?
+                        .resizable()
+                        .scaledToFill()
+                }
+                .frame(width: 200, height: 200)
+            }
+            HStack {
+                Text(viewModel.weatherData?.location.name ?? "")
+                    .font(.title)
+                    .fontDesign(.rounded)
+                    .fontWeight(.semibold)
+                Image(systemName: "location.fill")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            }
+            Text("\(Int(viewModel.weatherData?.current.feelslikeF ?? 0) )°")
+                .font(.system(size: 60))
+                .fontDesign(.rounded)
+                .fontWeight(.semibold)
+            userDefaultWeatherCard
+        }
+    }
+    
+    @ViewBuilder
+    var userDefaultWeatherCard: some View {
+        RoundedRectangle(cornerRadius: 20).fill(Color.gray.opacity(0.1))
+            .overlay {
+                HStack {
+                    VStack(alignment: .center, spacing: 15) {
+                        Text("Humidity")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.5)
+                        Text("\(viewModel.weatherData?.current.humidity ?? 0)%")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.8)
                     }
-                .frame(maxHeight: 150)
-                .padding(.top)
+                    Spacer()
+                    VStack(alignment: .center, spacing: 15) {
+                        Text("UV")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.5)
+                        Text("\(Int(viewModel.weatherData?.current.uv ?? 0))")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.8)
+                    }
+                    Spacer()
+                    VStack(alignment: .center, spacing: 15) {
+                        Text("Feels Like")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.5)
+                        Text("\(Int(viewModel.weatherData?.current.feelslikeF ?? 0))°")
+                            .fontDesign(.rounded)
+                            .fontWeight(.light).opacity(0.8)
+                    }
+                }
+                .padding()
+            }
+        .frame(maxHeight: 125)
+        .padding(.horizontal, 20)
+    }
+    
+    @ViewBuilder
+    var currentWeatherView: some View {
+        Button {
+            viewModel.setUserDefaults()
+        } label: {
+            RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.1))
+                .overlay {
+                    HStack {
+                        VStack(alignment: .center) {
+                            Text(viewModel.weatherData?.location.name ?? "")
+                                .font(.callout)
+                                .fontDesign(.rounded)
+                                .fontWeight(.semibold)
+                            Text("\(Int(viewModel.weatherData?.current.feelslikeF ?? 0) )°")
+                                .font(.system(size: 60))
+                                .fontDesign(.rounded)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        VStack {
+                            if let icon = viewModel.weatherData?.current.condition.icon {
+                                AsyncImage(url: URL(string: "https:\(icon)")) { result in
+                                    result.image?
+                                        .resizable()
+                                        .scaledToFill()
+                                }
+                                .frame(width: 200, height: 200)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .padding()
+                }
+            .frame(maxHeight: 150)
+            .padding(.top)
+        }
+
+                
     }
     
     @ViewBuilder
