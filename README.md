@@ -24,3 +24,10 @@ The application follows the MVVM (Model-View-ViewModel) architecture to ensure s
 <h3>Model:</h3> Defines the weather data structures (WeatherData, Location, CurrentWeather).
 <h3>ViewModel:</h3> Manages data flow between the model and the view, including networking and local storage logic.
 <h3>View:</h3> Implements SwiftUI views for search, weather display, and error states.
+
+![image](https://github.com/user-attachments/assets/673c7c1f-533a-401a-a14c-54df021ecf86)
+![image](https://github.com/user-attachments/assets/03e94eee-3537-4ff3-9289-0c8e5567f175)
+![image](https://github.com/user-attachments/assets/71b46a37-db43-4731-ada4-37afb00e86e2)
+
+
+
